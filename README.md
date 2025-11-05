@@ -1,4 +1,3 @@
-
 # ReferralHub – Complete Referral Management System
 
 **ReferralHub** is a full-stack referral management system designed to streamline customer referrals, automate reward distribution, and provide real-time analytics.
@@ -44,29 +43,122 @@ Built using **Next.js**, **Node.js**, and **MongoDB**, it demonstrates scalable 
 
 ## System Architecture
 
-```mermaid
-graph TB
-    subgraph Frontend
-        A[Next.js Application] --> B[React Components]
-        B --> C[State Management (Zustand)]
-        C --> D[API Layer (Axios)]
-    end
-    
-    subgraph Backend
-        E[Express API] --> F[JWT Authentication Middleware]
-        F --> G[Controllers and Business Logic]
-    end
-    
-    subgraph Database
-        H[MongoDB Atlas] --> I[Users Collection]
-        H --> J[Referrals Collection]
-        H --> K[Purchases Collection]
-        H --> L[Credit Ledger]
-    end
+###  UML Use Case Diagram
 
-    D --> E
-    G --> H
+```mermaid
+usecaseDiagram
+    actor "User" as U
+    actor "Referrer" as R
+    actor "Admin" as A
+
+    rectangle ReferralHub {
+        (Register Account) as UC1
+        (Login / Logout) as UC2
+        (Generate Referral Link) as UC3
+        (Share Referral Link) as UC4
+        (Accept Referral & Sign Up) as UC5
+        (Make Purchase) as UC6
+        (Earn Credits) as UC7
+        (Redeem Credits) as UC8
+        (View Dashboard) as UC9
+        (View Leaderboard) as UC10
+        (Manage Users) as UC11
+        (Monitor Referrals) as UC12
+        (Analyze System Reports) as UC13
+    }
+
+    U --> UC1
+    U --> UC2
+    U --> UC6
+    U --> UC7
+    U --> UC8
+    U --> UC9
+    U --> UC10
+
+    R --> UC3
+    R --> UC4
+    R --> UC5
+    R --> UC6
+    R --> UC7
+    R --> UC9
+
+    A --> UC11
+    A --> UC12
+    A --> UC13
+
+    UC5 .> UC1 : <<includes>>
+    UC6 .> UC7 : <<triggers>>
+    UC7 .> UC9 : <<updates>>
+    UC8 .> UC9 : <<updates>>
 ```
+
+---
+
+### UML Class Diagram
+
+```mermaid
+classDiagram
+    class User {
+        +ObjectId _id
+        +string name
+        +string email
+        +string passwordHash
+        +string referralCode
+        +number credits
+        +Date createdAt
+        +Date updatedAt
+        +register()
+        +login()
+        +generateReferralLink()
+        +viewDashboard()
+    }
+
+    class Referral {
+        +ObjectId _id
+        +ObjectId referrerId
+        +ObjectId referredUserId
+        +string referralCode
+        +string status
+        +boolean credited
+        +Date expiryDate
+        +Date createdAt
+        +Date updatedAt
+        +markConverted()
+        +expire()
+    }
+
+    class Purchase {
+        +ObjectId _id
+        +ObjectId userId
+        +ObjectId referralId
+        +number amount
+        +boolean referrerCredited
+        +number creditsAwarded
+        +Date createdAt
+        +Date updatedAt
+        +createPurchase()
+        +triggerCreditAward()
+    }
+
+    class CreditLedger {
+        +ObjectId _id
+        +ObjectId userId
+        +string type
+        +number amount
+        +string description
+        +Date createdAt
+        +logTransaction()
+    }
+
+    %% Relationships
+    User "1" --> "many" Referral : referrer
+    User "1" --> "many" Purchase : makes
+    Referral "1" --> "1" User : referredUser
+    Referral "1" --> "many" Purchase : triggers
+    User "1" --> "many" CreditLedger : has credits
+```
+
+---
 
 ### Architectural Principles
 
@@ -125,6 +217,8 @@ graph TB
 * JWT tokens are created and stored in secure, HttpOnly cookies.
 * If a referral code is provided, a pending referral relationship is established.
 
+---
+
 ### 2. Referral Flow
 
 ```mermaid
@@ -142,6 +236,8 @@ sequenceDiagram
     S->>S: Credits both users (2 each) and marks referral as converted
 ```
 
+---
+
 ### 3. Purchase and Credit System
 
 * Each purchase triggers validation for referral eligibility.
@@ -149,10 +245,12 @@ sequenceDiagram
 * Transactions are executed atomically to prevent double-crediting.
 * The referral status updates from *Pending* to *Converted*.
 
+---
+
 ### 4. Dashboard and Analytics
 
 * Users view referral stats, conversion rates, and credit balance in real time.
-* The dashboard provides key metrics such as:
+* Dashboard provides key metrics such as:
 
   * Total referrals sent
   * Converted referrals
@@ -165,22 +263,13 @@ sequenceDiagram
 
 ### Swagger API Documentation
 
-* Available at: `http://localhost:4000/api-docs`
-* Provides interactive API testing and validation
+* Interactive API testing and validation
 * Displays endpoint details, request/response schemas, and authentication handling
-
-**Benefits**
-
-* Enables rapid frontend integration
-* Simplifies debugging and testing
-* Ensures consistent API behavior across teams
 
 ### Storybook Component Library
 
-* Accessible at: `http://localhost:6006`
-* Displays all UI components in isolation with adjustable controls
+* Displays UI components in isolation with adjustable controls
 * Supports responsive and accessibility testing
-* Provides live documentation derived from TypeScript props
 
 ---
 
@@ -192,141 +281,64 @@ sequenceDiagram
 * npm v9+
 * MongoDB Atlas account or local MongoDB instance
 
-### Setup Instructions
+**Access Points**
 
-#### 1. Clone the Repository
-
-```bash
-git clone <repository>
-cd referral-system
-```
-
-#### 2. Backend Setup
-
-```bash
-cd backend
-npm install
-```
-
-Create a `.env` file with:
-
-```
-MONGODB_URI=<your_mongodb_connection_string>
-JWT_SECRET=<your_jwt_secret>
-PORT=4000
-CORS_ORIGIN=http://localhost:3001
-FRONTEND_URL=http://localhost:3001
-```
-
-Start the backend:
-
-```bash
-npm run dev
-```
-
-#### 3. Frontend Setup
-
-```bash
-cd frontend
-npm install
-```
-
-Create `.env.local`:
-
-```
-NEXT_PUBLIC_API_BASE=http://localhost:4000
-```
-
-Start the frontend:
-
-```bash
-npm run dev
-```
-
-#### 4. Access Points
-
-* Frontend: [http://localhost:3001](http://localhost:3001)
-* Backend API: [http://localhost:4000](http://localhost:4000)
-* API Docs (Swagger): [http://localhost:4000/api-docs](http://localhost:4000/api-docs)
-* Storybook: [http://localhost:6006](http://localhost:6006)
+* Frontend: https://referral-2.vercel.app
+* Swagger: https://referral-beta.vercel.app/api-docs
 
 ---
 
 ## Testing the Complete Flow
 
-### End-to-End Referral Scenario
-
-1. **Create a Referrer Account:**
-   Sign up as User A and note the generated referral code.
-
-2. **Share Referral Link:**
-   Copy and share your referral link (e.g., `/signup?ref=abc123`).
-
-3. **Register a Referred User:**
-   Open the link in an incognito window, sign up as User B.
-
-4. **Simulate Purchase:**
-   User B makes a purchase, triggering the credit distribution.
-
-5. **Verify Dashboard Updates:**
+1. Create Referrer (User A) → note referral code
+2. Share referral link → `/signup?ref=abc123`
+3. Referred user (User B) signs up via link
+4. User B makes purchase → credits both users
+5. Dashboard updates:
 
    * User A: 1 referral, 1 converted, 2 credits
    * User B: 0 referrals, 0 converted, 2 credits
 
-### Expected Results
-
-* Both users receive 2 credits on first purchase.
-* Referral status updates to “converted.”
-* Dashboard reflects updated statistics in real time.
-* No duplicate crediting occurs.
+ **Expected:**
+Referral marked “converted” and credits updated atomically.
 
 ---
 
 ## System Features
 
-### Authentication and Security
+### Authentication & Security
 
-* JWT-based authentication with HttpOnly cookies
-* Password hashing with `bcrypt`
-* Input validation using `Zod`
-* CORS and CSRF protection
-* Secure database connections via MongoDB Atlas
+* JWT with HttpOnly cookies
+* bcrypt password hashing
+* Zod validation
+* CORS + CSRF protection
 
 ### Referral Management
 
-* Unique 8-character referral codes
-* Referral link generation and tracking
-* Status management (pending → converted → expired)
-* Expiration handling (default 30 days)
+* 8-character unique codes
+* Referral tracking & expiration (30 days)
+* Status transitions: *pending → converted → expired*
 
-### Credit and Reward System
+### Credit & Reward System
 
-* Automatic 2-credit reward for referrer and referred user
-* Transaction-safe crediting via MongoDB sessions
-* Prevents double-crediting through unique constraints
-* Maintains credit history and audit logs
+* 2-credit reward per successful referral
+* Atomic transactions
+* CreditLedger audit logs
 
-### Analytics and Reporting
+### Analytics & Reporting
 
-* Real-time dashboard metrics
-* Conversion and referral trend visualization
-* Leaderboards showcasing top referrers
-* Activity feeds for recent referral events
+* Real-time metrics and leaderboards
+* Referral conversion analytics
 
 ### User Experience
 
-* Modern, responsive interface
-* Optimized with Tailwind CSS and Framer Motion
+* Responsive Tailwind + Framer Motion UI
 * Dark mode support
-* Seamless social sharing integration
+* Social sharing integration
 
 ---
 
 ## Security Implementation
-
-### Authentication
-
-JWT tokens are securely stored using HttpOnly cookies:
 
 ```typescript
 res.cookie('access_token', token, {
@@ -337,42 +349,17 @@ res.cookie('access_token', token, {
 });
 ```
 
-### Data Validation
-
-All user inputs are validated with `Zod` schemas to ensure type safety and prevent malformed requests.
-
-### Database Security
-
-* Unique indexes prevent duplicate referrals.
-* Transactions maintain credit consistency.
-* Encrypted connections protect data integrity.
+* Zod ensures safe payloads
+* MongoDB transactions prevent credit inconsistencies
+* TLS-protected DB connections
 
 ---
 
-## Performance and Scalability
+## Performance & Scalability
 
-### Database Optimization
-
-* Indexed collections for fast lookups
-* Aggregation pipelines for reporting
-* Connection pooling for high throughput
-
-### Frontend Optimization
-
-* Next.js automatic code splitting and caching
-* Lightweight state management with Zustand
-* Optimized images and assets
-
-### Backend Scalability
-
-* Stateless JWT architecture supports horizontal scaling
-* Microservice-friendly modular design
-* Load balancer compatible deployment
-
-### Monitoring
-
-* Health check endpoints
-* Structured error logging
-* API performance tracking
+* **Indexed queries & connection pooling** for database
+* **Next.js caching & SSR** for performance
+* **Stateless JWT auth** for horizontal scaling
+* **Microservice-ready** architecture
 
 
