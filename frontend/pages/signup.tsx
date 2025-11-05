@@ -34,7 +34,7 @@ export default function Signup() {
       console.log('Attempting signup with:', { email, password: '***', referralCode });
       console.log('API base URL:', api.defaults.baseURL);
       
-      const { data } = await api.post('/auth/register', { email, password, referralCode: referralCode || undefined });
+      const { data } = await api.post('/api/auth/register', { email, password, referralCode: referralCode || undefined });
       console.log('Signup successful:', data);
       setUser(data.user);
       

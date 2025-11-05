@@ -27,7 +27,7 @@ function Header() {
       console.log('🚪 Starting logout process...');
       const { api } = await import('../lib/api');
       console.log('📡 Calling logout API...');
-      await api.post('/auth/logout');
+      await api.post('/api/auth/logout');
       console.log('✅ Logout API successful');
       
       // Clear user state and localStorage token

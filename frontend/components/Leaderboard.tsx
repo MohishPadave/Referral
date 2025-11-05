@@ -11,7 +11,7 @@ export function Leaderboard() {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await api.get('/referrals/leaderboard');
+        const { data } = await api.get('/api/referrals/leaderboard');
         setEntries(data.leaderboard);
       } catch (error) {
         console.error('Failed to load leaderboard:', error);

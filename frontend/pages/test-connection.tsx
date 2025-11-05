@@ -100,7 +100,7 @@ export default function TestConnection() {
                 const testPassword = 'testpassword123';
                 
                 console.log('📝 Step 1: Testing registration...');
-                const registerResponse = await api.post('/auth/register', { 
+                const registerResponse = await api.post('/api/auth/register', { 
                   email: testEmail, 
                   password: testPassword 
                 });
@@ -108,12 +108,12 @@ export default function TestConnection() {
                 
                 // Step 2: Test protected endpoint immediately after registration
                 console.log('🔒 Step 2: Testing /users/me after registration...');
-                const meResponse = await api.get('/users/me');
+                const meResponse = await api.get('/api/users/me');
                 console.log('✅ /users/me response:', meResponse.data);
                 
                 // Step 3: Test dashboard endpoint
                 console.log('📊 Step 3: Testing /users/dashboard...');
-                const dashboardResponse = await api.get('/users/dashboard');
+                const dashboardResponse = await api.get('/api/users/dashboard');
                 console.log('✅ Dashboard response:', dashboardResponse.data);
                 
                 setResult({ 
@@ -153,14 +153,14 @@ export default function TestConnection() {
               try {
                 // Test existing user login
                 console.log('🔑 Testing existing user login...');
-                const loginResponse = await api.post('/auth/login', { 
+                const loginResponse = await api.post('/api/auth/login', { 
                   email: 'test@example.com', 
                   password: 'testpassword123' 
                 });
                 console.log('✅ Login response:', loginResponse.data);
                 
                 // Test protected endpoint
-                const meResponse = await api.get('/users/me');
+                const meResponse = await api.get('/api/users/me');
                 console.log('✅ /users/me response:', meResponse.data);
                 
                 setResult({ 

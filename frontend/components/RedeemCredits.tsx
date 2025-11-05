@@ -18,7 +18,7 @@ export function RedeemCredits() {
   const onRedeem = async () => {
     try {
       setLoading(true);
-      await api.post('/credits/redeem', { 
+      await api.post('/api/credits/redeem', { 
         amount: selectedReward.cost, 
         item: selectedReward.name 
       });

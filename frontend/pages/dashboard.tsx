@@ -26,14 +26,14 @@ export default function Dashboard() {
         // If we don't have a user, try to fetch it
         if (!user) {
           console.log('📡 Fetching user data from /users/me...');
-          const me = await api.get('/users/me');
+          const me = await api.get('/api/users/me');
           console.log('✅ User data received:', me.data.user);
           setUser(me.data.user);
         }
         
         // Always fetch fresh dashboard stats
         console.log('📊 Fetching dashboard stats...');
-        const s = await api.get('/users/dashboard');
+        const s = await api.get('/api/users/dashboard');
         console.log('✅ Dashboard stats received:', s.data.stats);
         setStats(s.data.stats);
         
@@ -71,10 +71,10 @@ export default function Dashboard() {
       console.log('API base URL:', api.defaults.baseURL);
       console.log('With credentials:', api.defaults.withCredentials);
       
-      const purchaseResponse = await api.post('/purchases', { amount: 10 });
+      const purchaseResponse = await api.post('/api/purchases', { amount: 10 });
       console.log('Purchase response:', purchaseResponse.data);
       
-      const s = await api.get('/users/dashboard');
+      const s = await api.get('/api/users/dashboard');
       console.log('Updated stats:', s.data.stats);
       setStats(s.data.stats);
       

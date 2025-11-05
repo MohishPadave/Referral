@@ -25,7 +25,7 @@ export default function AuthDebug() {
 
       // Step 2: Test simple auth endpoint
       try {
-        const authTest = await api.get('/auth/test');
+        const authTest = await api.get('/api/auth/test');
         addResult('Auth Test', true, authTest.data);
       } catch (error: any) {
         addResult('Auth Test', false, {
@@ -36,7 +36,7 @@ export default function AuthDebug() {
 
       // Step 3: Test /users/me
       try {
-        const meResponse = await api.get('/users/me');
+        const meResponse = await api.get('/api/users/me');
         addResult('Users Me', true, meResponse.data);
       } catch (error: any) {
         addResult('Users Me', false, {
@@ -47,7 +47,7 @@ export default function AuthDebug() {
 
       // Step 4: Test dashboard endpoint
       try {
-        const dashboardResponse = await api.get('/users/dashboard');
+        const dashboardResponse = await api.get('/api/users/dashboard');
         addResult('Dashboard', true, dashboardResponse.data);
       } catch (error: any) {
         addResult('Dashboard', false, {
@@ -70,7 +70,7 @@ export default function AuthDebug() {
       const testPassword = 'testpassword123';
 
       // Register new user
-      const registerResponse = await api.post('/auth/register', {
+      const registerResponse = await api.post('/api/auth/register', {
         email: testEmail,
         password: testPassword
       });

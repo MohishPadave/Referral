@@ -16,7 +16,7 @@ export function ReferralCharts() {
     (async () => {
       try {
         // Simple client-side synthesis using dashboard + history
-        const hist = await api.get('/credits/history');
+        const hist = await api.get('/api/credits/history');
         const byDay: Record<string, { referred: number; converted: number; credits: number }> = {};
         
         for (const h of hist.data.history as any[]) {

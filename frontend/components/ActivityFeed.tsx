@@ -18,7 +18,7 @@ export function ActivityFeed() {
     let mounted = true;
     const load = async () => {
       try {
-        const { data } = await api.get('/credits/activity');
+        const { data } = await api.get('/api/credits/activity');
         if (mounted) {
           // Transform string array to activity items with mock data
           const activityItems = (data.feed as string[]).map((txt, idx) => {

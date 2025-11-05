@@ -36,7 +36,7 @@ export const testApi = axios.create({
 export const testConnection = async () => {
   try {
     console.log('🔍 Testing connection to:', api.defaults.baseURL);
-    const response = await api.get('/health');
+    const response = await api.get('/api/health');
     console.log('✅ Backend connection successful:', response.data);
     return { success: true, data: response.data };
   } catch (error: any) {
@@ -50,7 +50,7 @@ export const testConnection = async () => {
 export const testConnectionNoCredentials = async () => {
   try {
     console.log('🔍 Testing connection (no credentials) to:', testApi.defaults.baseURL);
-    const response = await testApi.get('/health');
+    const response = await testApi.get('/api/health');
     console.log('✅ Backend connection successful (no credentials):', response.data);
     return { success: true, data: response.data };
   } catch (error: any) {

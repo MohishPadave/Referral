@@ -32,7 +32,7 @@ export default function Login() {
       console.log('Attempting login with:', { email, password: '***' });
       console.log('API base URL:', api.defaults.baseURL);
       
-      const { data } = await api.post('/auth/login', { email, password });
+      const { data } = await api.post('/api/auth/login', { email, password });
       console.log('Login successful:', data);
       setUser(data.user);
       
