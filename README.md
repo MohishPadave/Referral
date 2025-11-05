@@ -1,6 +1,8 @@
+
+````markdown
 # ReferralHub – Complete Referral Management System
 
-**ReferralHub** is a full-stack referral management system designed to streamline customer referrals, automate reward distribution, and provide real-time analytics.
+**ReferralHub** is a full-stack referral management system designed to streamline customer referrals, automate reward distribution, and provide real-time analytics.  
 Built using **Next.js**, **Node.js**, and **MongoDB**, it demonstrates scalable architecture, secure authentication, and an enterprise-grade feature set suitable for modern businesses.
 
 ---
@@ -26,71 +28,64 @@ Built using **Next.js**, **Node.js**, and **MongoDB**, it demonstrates scalable 
 
 **ReferralHub** is a comprehensive referral system that enables businesses to:
 
-* Track referrals through unique codes and personalized links
-* Reward users with credits for successful conversions
-* Monitor referral performance and user engagement
-* Analyze ROI through detailed dashboards and analytics
-* Scale securely with a modern, production-ready architecture
+* Track referrals through unique codes and personalized links  
+* Reward users with credits for successful conversions  
+* Monitor referral performance and user engagement  
+* Analyze ROI through detailed dashboards and analytics  
+* Scale securely with a modern, production-ready architecture  
 
 ### Business Value
 
-* **Boost customer acquisition** through incentive-based referrals
-* **Lower marketing costs** by leveraging existing customers
-* **Automate reward distribution** securely and transparently
-* **Provide actionable insights** through data-driven analytics
+* **Boost customer acquisition** through incentive-based referrals  
+* **Lower marketing costs** by leveraging existing customers  
+* **Automate reward distribution** securely and transparently  
+* **Provide actionable insights** through data-driven analytics  
 
 ---
 
 ## System Architecture
 
-###  UML Use Case Diagram
+### UML Use Case Diagram
 
 ```mermaid
+%%{init: {"theme": "neutral"}}%%
 usecaseDiagram
-    actor "User" as U
-    actor "Referrer" as R
-    actor "Admin" as A
+actor User
+actor Referrer
+actor Admin
 
-    rectangle ReferralHub {
-        (Register Account) as UC1
-        (Login / Logout) as UC2
-        (Generate Referral Link) as UC3
-        (Share Referral Link) as UC4
-        (Accept Referral & Sign Up) as UC5
-        (Make Purchase) as UC6
-        (Earn Credits) as UC7
-        (Redeem Credits) as UC8
-        (View Dashboard) as UC9
-        (View Leaderboard) as UC10
-        (Manage Users) as UC11
-        (Monitor Referrals) as UC12
-        (Analyze System Reports) as UC13
-    }
+rectangle ReferralHub {
+  (Register Account) as UC1
+  (Login / Logout) as UC2
+  (Generate Referral Link) as UC3
+  (Share Referral Link) as UC4
+  (Accept Referral & Sign Up) as UC5
+  (Make Purchase) as UC6
+  (Earn Credits) as UC7
+  (Redeem Credits) as UC8
+  (View Dashboard) as UC9
+  (View Leaderboard) as UC10
+  (Manage Users) as UC11
+  (Monitor Referrals) as UC12
+  (Analyze System Reports) as UC13
+}
 
-    U --> UC1
-    U --> UC2
-    U --> UC6
-    U --> UC7
-    U --> UC8
-    U --> UC9
-    U --> UC10
+User --> UC1
+User --> UC2
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+User --> UC10
 
-    R --> UC3
-    R --> UC4
-    R --> UC5
-    R --> UC6
-    R --> UC7
-    R --> UC9
+Referrer --> UC3
+Referrer --> UC4
+Referrer --> UC5
 
-    A --> UC11
-    A --> UC12
-    A --> UC13
-
-    UC5 .> UC1 : <<includes>>
-    UC6 .> UC7 : <<triggers>>
-    UC7 .> UC9 : <<updates>>
-    UC8 .> UC9 : <<updates>>
-```
+Admin --> UC11
+Admin --> UC12
+Admin --> UC13
+````
 
 ---
 
@@ -150,7 +145,6 @@ classDiagram
         +logTransaction()
     }
 
-    %% Relationships
     User "1" --> "many" Referral : referrer
     User "1" --> "many" Purchase : makes
     Referral "1" --> "1" User : referredUser
@@ -283,8 +277,8 @@ sequenceDiagram
 
 **Access Points**
 
-* Frontend: https://referral-2.vercel.app
-* Swagger: https://referral-beta.vercel.app/api-docs
+* Frontend: [https://referral-2.vercel.app](https://referral-2.vercel.app)
+* Swagger: [https://referral-beta.vercel.app/api-docs](https://referral-beta.vercel.app/api-docs)
 
 ---
 
@@ -299,7 +293,7 @@ sequenceDiagram
    * User A: 1 referral, 1 converted, 2 credits
    * User B: 0 referrals, 0 converted, 2 credits
 
- **Expected:**
+**Expected:**
 Referral marked “converted” and credits updated atomically.
 
 ---
@@ -361,5 +355,9 @@ res.cookie('access_token', token, {
 * **Next.js caching & SSR** for performance
 * **Stateless JWT auth** for horizontal scaling
 * **Microservice-ready** architecture
+
+---
+
+```
 
 
