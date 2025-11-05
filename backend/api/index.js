@@ -7,6 +7,8 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { z } = require('zod');
+const swaggerUi = require('swagger-ui-express');
+const swaggerJSDoc = require('swagger-jsdoc');
 const app = express();
 const mongoose = require('mongoose');
 
@@ -128,10 +130,91 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// --- Swagger Configuration ---
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'ReferralHub API',
+      version: '1.0.0',
+      description: 'A comprehensive referral system API with user authentication, referral tracking, and credit management',
+      contact: {
+        name: 'ReferralHub Team',
+        email: 'support@referralhub.com',
+      },
+    },
+    servers: [
+      {
+        url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
+        description: 'Production server',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        cookieAuth: {
+          type: 'apiKey',
+          in: 'cookie',
+          name: 'access_token',
+          description: 'JWT token stored in HTTP-only cookie',
+        },
+      },
+      schemas: {
+        User: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', example: '507f1f77bcf86cd799439011' },
+            email: { type: 'string', format: 'email', example: 'user@example.com' },
+            referralCode: { type: 'string', example: 'abc123def' },
+            credits: { type: 'number', example: 10 },
+          },
+        },
+        Error: {
+          type: 'object',
+          properties: {
+            error: { type: 'string', example: 'Invalid credentials' },
+          },
+        },
+      },
+    },
+    security: [{ cookieAuth: [] }],
+  },
+  apis: [], // We'll define routes inline
+};
+
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
+
 
 // --- 3. Route Definitions ---
 
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'ReferralHub API Documentation',
+}));
+
 // Health Check
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: Health check endpoint
+ *     tags: [System]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: API is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: ok
+ *                 message:
+ *                   type: string
+ *                   example: Vercel Express API is running.
+ */
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Vercel Express API is running.' });
 });
@@ -196,6 +279,51 @@ app.get('/test-jwt', (req, res) => {
 });
 
 // Auth Routes
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 example: password123
+ *               referralCode:
+ *                 type: string
+ *                 example: abc123def
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 token:
+ *                   type: string
+ *       400:
+ *         description: Validation error
+ *       409:
+ *         description: Email already in use
+ */
 app.post('/auth/register', async (req, res) => {
   try {
     await connectToDatabase();
@@ -260,6 +388,45 @@ app.post('/auth/register', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 token:
+ *                   type: string
+ *       401:
+ *         description: Invalid credentials
+ */
 app.post('/auth/login', async (req, res) => {
   try {
     await connectToDatabase();
