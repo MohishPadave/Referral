@@ -375,38 +375,4 @@ All user inputs are validated with `Zod` schemas to ensure type safety and preve
 * Structured error logging
 * API performance tracking
 
----
 
-## Demo Script
-
-### Introduction
-
-ReferralHub is a full-stack referral management platform demonstrating scalable architecture, authentication, analytics, and documentation.
-
-### Key Steps
-
-1. Overview of tech stack and architecture.
-2. Showcase Swagger API documentation and Storybook UI components.
-3. Demonstrate user registration, referral sharing, and purchase simulation.
-4. Display dashboard analytics updating in real time.
-
-### Conclusion
-
-ReferralHub delivers a secure, automated, and analytics-driven referral workflow — combining modern frontend design with robust backend architecture.
-
----
-
-## Support and Contact
-
-For inquiries, feedback, or contributions:
-
-* **Email:** [support@referralhub.com](mailto:support@referralhub.com)
-* **Documentation:** See `DOCUMENTATION.md`
-* **Issues:** Submit via GitHub Issues
-* **Discussions:** Participate on GitHub Discussions
-
----
-
-**Developed with dedication and powered by modern web technologies.**
-
----
