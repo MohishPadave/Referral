@@ -187,10 +187,13 @@ const swaggerSpec = swaggerJSDoc(swaggerOptions);
 // --- 3. Route Definitions ---
 
 // Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'ReferralHub API Documentation',
-}));
+app.use('/api-docs', swaggerUi.serve);
+app.get('/api-docs', (req, res) => {
+  res.send(swaggerUi.generateHTML(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'ReferralHub API Documentation',
+  }));
+});
 
 // Health Check
 /**
@@ -224,7 +227,7 @@ app.get('/health', (req, res) => {
 });
 
 // Environment Variables Debug endpoint
-app.get('/debug/env', (req, res) => {
+app.get('/api/debug/env', (req, res) => {
   res.json({
     environment: process.env.NODE_ENV,
     jwtSecretSet: !!process.env.JWT_SECRET,
@@ -240,7 +243,7 @@ app.get('/debug/env', (req, res) => {
 });
 
 // JWT Test endpoint
-app.get('/test-jwt', (req, res) => {
+app.get('/api/test-jwt', (req, res) => {
   try {
     const testPayload = { userId: 'test123', timestamp: Date.now() };
     const jwtSecret = process.env.JWT_SECRET || 'fallback-secret';
@@ -281,7 +284,7 @@ app.get('/test-jwt', (req, res) => {
 // Auth Routes
 /**
  * @swagger
- * /auth/register:
+ * /api/auth/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Authentication]
@@ -324,7 +327,7 @@ app.get('/test-jwt', (req, res) => {
  *       409:
  *         description: Email already in use
  */
-app.post('/auth/register', async (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   try {
     await connectToDatabase();
     
@@ -390,7 +393,7 @@ app.post('/auth/register', async (req, res) => {
 
 /**
  * @swagger
- * /auth/login:
+ * /api/auth/login:
  *   post:
  *     summary: Login user
  *     tags: [Authentication]
@@ -427,7 +430,7 @@ app.post('/auth/register', async (req, res) => {
  *       401:
  *         description: Invalid credentials
  */
-app.post('/auth/login', async (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
     await connectToDatabase();
     
@@ -478,7 +481,7 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
-app.post('/auth/logout', (req, res) => {
+app.post('/api/auth/logout', (req, res) => {
   const cookieName = process.env.COOKIE_NAME || 'access_token';
   const cookieSecure = process.env.COOKIE_SECURE === 'true';
   
@@ -525,7 +528,7 @@ function verifyToken(req, res, next) {
 }
 
 // Simple auth test endpoint
-app.get('/auth/test', verifyToken, (req, res) => {
+app.get('/api/auth/test', verifyToken, (req, res) => {
   console.log('🧪 Auth test endpoint called for user:', req.userId);
   res.json({ 
     success: true, 
@@ -536,7 +539,7 @@ app.get('/auth/test', verifyToken, (req, res) => {
 });
 
 // User endpoints
-app.get('/users/me', verifyToken, async (req, res) => {
+app.get('/api/users/me', verifyToken, async (req, res) => {
   try {
     console.log('👤 /users/me called for user:', req.userId);
     await connectToDatabase();
@@ -553,7 +556,7 @@ app.get('/users/me', verifyToken, async (req, res) => {
   }
 });
 
-app.get('/users/dashboard', verifyToken, async (req, res) => {
+app.get('/api/users/dashboard', verifyToken, async (req, res) => {
   try {
     await connectToDatabase();
     const userId = req.userId;
@@ -579,7 +582,7 @@ app.get('/users/dashboard', verifyToken, async (req, res) => {
 });
 
 // Purchase endpoint
-app.post('/purchases', verifyToken, async (req, res) => {
+app.post('/api/purchases', verifyToken, async (req, res) => {
   try {
     await connectToDatabase();
     const { amount } = req.body;
@@ -683,7 +686,7 @@ app.post('/purchases', verifyToken, async (req, res) => {
 });
 
 // Get purchase history (for debugging)
-app.get('/purchases/history', verifyToken, async (req, res) => {
+app.get('/api/purchases/history', verifyToken, async (req, res) => {
   try {
     await connectToDatabase();
     const purchases = await Purchase.find({ userId: req.userId })
@@ -699,7 +702,7 @@ app.get('/purchases/history', verifyToken, async (req, res) => {
 });
 
 // Get referral history (for debugging)
-app.get('/referrals/history', verifyToken, async (req, res) => {
+app.get('/api/referrals/history', verifyToken, async (req, res) => {
   try {
     await connectToDatabase();
     
@@ -724,7 +727,7 @@ app.get('/referrals/history', verifyToken, async (req, res) => {
 });
 
 // Test referral system (for debugging)
-app.post('/test/referral-system', async (req, res) => {
+app.post('/api/test/referral-system', async (req, res) => {
   try {
     await connectToDatabase();
     
@@ -849,6 +852,105 @@ app.post('/test/referral-system', async (req, res) => {
       error: 'Test failed',
       details: error.message 
     });
+  }
+});
+
+// Credits endpoints
+app.get('/api/credits/activity', verifyToken, async (req, res) => {
+  try {
+    // Mock activity data for now
+    res.json(['Recent purchase: +2 credits', 'Referral converted: +2 credits']);
+  } catch (error) {
+    console.error('❌ Credits activity error:', error);
+    res.status(500).json({ error: 'Failed to get credits activity' });
+  }
+});
+
+app.get('/api/credits/history', verifyToken, async (req, res) => {
+  try {
+    // Mock history data for now
+    res.json([]);
+  } catch (error) {
+    console.error('❌ Credits history error:', error);
+    res.status(500).json({ error: 'Failed to get credits history' });
+  }
+});
+
+app.post('/api/credits/redeem', verifyToken, async (req, res) => {
+  try {
+    const { amount, item } = req.body;
+    await connectToDatabase();
+    
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    if (user.credits < amount) {
+      return res.status(400).json({ error: 'Insufficient credits' });
+    }
+    
+    user.credits -= amount;
+    await user.save();
+    
+    res.json({ success: true, message: `Redeemed ${item}`, remainingCredits: user.credits });
+  } catch (error) {
+    console.error('❌ Credits redeem error:', error);
+    res.status(500).json({ error: 'Failed to redeem credits' });
+  }
+});
+
+// Referrals endpoints
+app.get('/api/referrals/leaderboard', verifyToken, async (req, res) => {
+  try {
+    await connectToDatabase();
+    
+    // Get top referrers
+    const leaderboard = await User.aggregate([
+      {
+        $lookup: {
+          from: 'referrals',
+          localField: '_id',
+          foreignField: 'referrerId',
+          as: 'referrals'
+        }
+      },
+      {
+        $addFields: {
+          referralCount: { $size: '$referrals' },
+          convertedCount: {
+            $size: {
+              $filter: {
+                input: '$referrals',
+                cond: { $eq: ['$$this.status', 'converted'] }
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: { referralCount: { $gt: 0 } }
+      },
+      {
+        $sort: { convertedCount: -1, referralCount: -1 }
+      },
+      {
+        $limit: 10
+      },
+      {
+        $project: {
+          email: 1,
+          credits: 1,
+          referralCount: 1,
+          convertedCount: 1
+        }
+      }
+    ]);
+    
+    res.json({ leaderboard });
+  } catch (error) {
+    console.error('❌ Leaderboard error:', error);
+    res.status(500).json({ error: 'Failed to get leaderboard' });
   }
 });
 
