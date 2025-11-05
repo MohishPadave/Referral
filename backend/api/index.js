@@ -96,7 +96,8 @@ async function connectToDatabase() {
 
 const allowedOrigins = [
   process.env.FRONTEND_URL, 
-  'https://referral-hub-l1a3-git-main-mohishs-projects-43ec9c03.vercel.app'
+  'https://referral-hub-l1a3-git-main-mohishs-projects-43ec9c03.vercel.app',
+  'https://referral-beta.vercel.app'
 ];
 
 app.use(cors({
@@ -168,31 +169,140 @@ const swaggerSpec = swaggerJSDoc(swaggerOptions);
 
 
 
+// API Documentation landing page
 app.get('/api-docs', (req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ReferralHub API Documentation</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 40px 20px;
+                line-height: 1.6;
+                color: #333;
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 40px;
+                padding-bottom: 20px;
+                border-bottom: 2px solid #eee;
+            }
+            .links {
+                display: grid;
+                gap: 20px;
+                margin: 30px 0;
+            }
+            .link-card {
+                padding: 20px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                text-decoration: none;
+                color: inherit;
+                transition: all 0.2s;
+            }
+            .link-card:hover {
+                border-color: #007acc;
+                box-shadow: 0 2px 8px rgba(0,122,204,0.1);
+            }
+            .link-title {
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #007acc;
+            }
+            .link-desc {
+                color: #666;
+                font-size: 14px;
+            }
+            .status {
+                background: #e8f5e8;
+                padding: 10px;
+                border-radius: 4px;
+                margin: 20px 0;
+                border-left: 4px solid #4caf50;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🚀 ReferralHub API</h1>
+            <p>A comprehensive referral system API with user authentication, referral tracking, and credit management</p>
+        </div>
+        
+        <div class="status">
+            <strong>✅ API Status:</strong> Running on ${req.get('host')} at ${new Date().toISOString()}
+        </div>
+        
+        <div class="links">
+            <a href="/api-docs-ui" class="link-card">
+                <div class="link-title">📖 Interactive API Documentation</div>
+                <div class="link-desc">Swagger UI with interactive API testing interface</div>
+            </a>
+            
+            <a href="/api-docs/json" class="link-card">
+                <div class="link-title">📄 OpenAPI JSON Specification</div>
+                <div class="link-desc">Raw OpenAPI 3.0 specification in JSON format</div>
+            </a>
+            
+            <a href="/api/health" class="link-card">
+                <div class="link-title">💚 Health Check</div>
+                <div class="link-desc">API health status endpoint</div>
+            </a>
+        </div>
+        
+        <h2>🔗 Main Endpoints</h2>
+        <ul>
+            <li><strong>POST /api/auth/register</strong> - Register a new user</li>
+            <li><strong>POST /api/auth/login</strong> - Login user</li>
+            <li><strong>GET /api/users/me</strong> - Get current user</li>
+            <li><strong>GET /api/users/dashboard</strong> - Get dashboard stats</li>
+            <li><strong>POST /api/purchases</strong> - Make a purchase</li>
+            <li><strong>GET /api/referrals/leaderboard</strong> - Get referral leaderboard</li>
+            <li><strong>GET /api/credits/activity</strong> - Get credits activity</li>
+        </ul>
+        
+        <p style="text-align: center; margin-top: 40px; color: #666; font-size: 14px;">
+            Built with Express.js and deployed on Vercel
+        </p>
+    </body>
+    </html>
+  `);
+});
+
+// JSON API specification endpoint
+app.get('/api-docs/json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.json({
+  
+  // Return the same swagger document used for the UI
+  const apiSpec = {
     openapi: '3.0.0',
     info: {
       title: 'ReferralHub API',
       version: '1.0.0',
-      description: 'A comprehensive referral system API'
+      description: 'A comprehensive referral system API with user authentication, referral tracking, and credit management',
     },
     servers: [
       {
         url: req.protocol + '://' + req.get('host'),
-        description: 'Current server'
-      }
+        description: 'Current server',
+      },
     ],
     paths: {
       '/api/health': {
         get: {
-          summary: 'Health check',
+          summary: 'Health check endpoint',
           responses: {
-            '200': {
-              description: 'API is healthy'
-            }
+            '200': { description: 'API is healthy' }
           }
         }
       },
@@ -205,12 +315,12 @@ app.get('/api-docs', (req, res) => {
               'application/json': {
                 schema: {
                   type: 'object',
+                  required: ['email', 'password'],
                   properties: {
                     email: { type: 'string', format: 'email' },
                     password: { type: 'string', minLength: 8 },
                     referralCode: { type: 'string' }
-                  },
-                  required: ['email', 'password']
+                  }
                 }
               }
             }
@@ -231,11 +341,11 @@ app.get('/api-docs', (req, res) => {
               'application/json': {
                 schema: {
                   type: 'object',
+                  required: ['email', 'password'],
                   properties: {
                     email: { type: 'string', format: 'email' },
                     password: { type: 'string' }
-                  },
-                  required: ['email', 'password']
+                  }
                 }
               }
             }
@@ -247,12 +357,267 @@ app.get('/api-docs', (req, res) => {
         }
       }
     }
-  });
+  };
+  
+  res.json(apiSpec);
 });
 
-app.use('/api-docs-ui', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+// Swagger UI setup with inline spec
+const swaggerDocument = {
+  openapi: '3.0.0',
+  info: {
+    title: 'ReferralHub API',
+    version: '1.0.0',
+    description: 'A comprehensive referral system API with user authentication, referral tracking, and credit management',
+    contact: {
+      name: 'ReferralHub Team',
+      email: 'support@referralhub.com',
+    },
+  },
+  servers: [
+    {
+      url: '/',
+      description: 'Current server',
+    },
+  ],
+  components: {
+    securitySchemes: {
+      cookieAuth: {
+        type: 'apiKey',
+        in: 'cookie',
+        name: 'access_token',
+        description: 'JWT token stored in HTTP-only cookie',
+      },
+    },
+    schemas: {
+      User: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: '507f1f77bcf86cd799439011' },
+          email: { type: 'string', format: 'email', example: 'user@example.com' },
+          referralCode: { type: 'string', example: 'abc123def' },
+          credits: { type: 'number', example: 10 },
+        },
+      },
+      Error: {
+        type: 'object',
+        properties: {
+          error: { type: 'string', example: 'Invalid credentials' },
+        },
+      },
+    },
+  },
+  paths: {
+    '/api/health': {
+      get: {
+        summary: 'Health check endpoint',
+        tags: ['System'],
+        security: [],
+        responses: {
+          '200': {
+            description: 'API is healthy',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'ok' },
+                    message: { type: 'string', example: 'Vercel Express API is running.' },
+                    timestamp: { type: 'string', example: '2023-11-03T22:47:27.000Z' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/register': {
+      post: {
+        summary: 'Register a new user',
+        tags: ['Authentication'],
+        security: [],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'user@example.com' },
+                  password: { type: 'string', minLength: 8, example: 'password123' },
+                  referralCode: { type: 'string', example: 'abc123def' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'User registered successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    user: { $ref: '#/components/schemas/User' },
+                    token: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Validation error' },
+          '409': { description: 'Email already in use' },
+        },
+      },
+    },
+    '/api/auth/login': {
+      post: {
+        summary: 'Login user',
+        tags: ['Authentication'],
+        security: [],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'user@example.com' },
+                  password: { type: 'string', example: 'password123' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Login successful',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    user: { $ref: '#/components/schemas/User' },
+                    token: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          '401': { description: 'Invalid credentials' },
+        },
+      },
+    },
+    '/api/users/me': {
+      get: {
+        summary: 'Get current user',
+        tags: ['Users'],
+        security: [{ cookieAuth: [] }],
+        responses: {
+          '200': {
+            description: 'User data',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    user: { $ref: '#/components/schemas/User' },
+                  },
+                },
+              },
+            },
+          },
+          '401': { description: 'Unauthorized' },
+          '404': { description: 'User not found' },
+        },
+      },
+    },
+    '/api/users/dashboard': {
+      get: {
+        summary: 'Get dashboard stats',
+        tags: ['Users'],
+        security: [{ cookieAuth: [] }],
+        responses: {
+          '200': {
+            description: 'Dashboard statistics',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    stats: {
+                      type: 'object',
+                      properties: {
+                        totalReferred: { type: 'number', example: 5 },
+                        convertedCount: { type: 'number', example: 3 },
+                        totalCredits: { type: 'number', example: 12 },
+                        referralLink: { type: 'string', example: 'https://example.com/signup?ref=abc123def' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '401': { description: 'Unauthorized' },
+        },
+      },
+    },
+    '/api/purchases': {
+      post: {
+        summary: 'Make a purchase',
+        tags: ['Purchases'],
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['amount'],
+                properties: {
+                  amount: { type: 'number', example: 10 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Purchase successful',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string', example: 'Purchase successful' },
+                    credits: { type: 'number', example: 12 },
+                    referralProcessed: { type: 'boolean', example: true },
+                  },
+                },
+              },
+            },
+          },
+          '401': { description: 'Unauthorized' },
+          '500': { description: 'Purchase failed' },
+        },
+      },
+    },
+  },
+  security: [{ cookieAuth: [] }],
+};
+
+app.use('/api-docs-ui', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'ReferralHub API Documentation',
+  swaggerOptions: {
+    persistAuthorization: true,
+  },
 }));
 
 app.get('/api/health', (req, res) => {
