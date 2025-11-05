@@ -19,43 +19,39 @@ export default function Dashboard() {
   useEffect(() => {
     (async () => {
       try {
-        console.log('🏠 Dashboard loading...');
-        console.log('👤 Current user in store:', user);
-        console.log('🔑 Token in localStorage:', typeof window !== 'undefined' ? !!localStorage.getItem('auth_token') : false);
+        console.log(' Dashboard loading...');
+        console.log('Current user in store:', user);
+        console.log('Token in localStorage:', typeof window !== 'undefined' ? !!localStorage.getItem('auth_token') : false);
         
-        // If we don't have a user, try to fetch it
         if (!user) {
-          console.log('📡 Fetching user data from /users/me...');
+          console.log(' Fetching user data from /users/me...');
           const me = await api.get('/api/users/me');
-          console.log('✅ User data received:', me.data.user);
+          console.log('User data received:', me.data.user);
           setUser(me.data.user);
         }
         
-        // Always fetch fresh dashboard stats
-        console.log('📊 Fetching dashboard stats...');
+        console.log('Fetching dashboard stats...');
         const s = await api.get('/api/users/dashboard');
-        console.log('✅ Dashboard stats received:', s.data.stats);
+        console.log(' Dashboard stats received:', s.data.stats);
         setStats(s.data.stats);
         
       } catch (error: any) {
-        console.error('❌ Dashboard loading error:', error);
+        console.error('Dashboard loading error:', error);
         console.error('Error details:', {
           status: error.response?.status,
           message: error.response?.data?.error || error.message,
           url: error.config?.url
         });
         
-        // Only redirect to login if it's an authentication error
         if (error.response?.status === 401) {
-          console.log('🔒 Authentication error - redirecting to login');
+          console.log('Authentication error - redirecting to login');
           setError('Please log in');
           if (typeof window !== 'undefined') {
-            // Clear any stored tokens
             localStorage.removeItem('auth_token');
             window.location.href = '/login';
           }
         } else {
-          console.log('⚠️ Non-auth error - staying on dashboard');
+          console.log(' Non-auth error - staying on dashboard');
           setError(`Error loading dashboard: ${error.response?.data?.error || error.message}`);
         }
       } finally {
@@ -78,7 +74,6 @@ export default function Dashboard() {
       console.log('Updated stats:', s.data.stats);
       setStats(s.data.stats);
       
-      // Show success notification
       const notification = document.createElement('div');
       notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
       notification.textContent = purchaseResponse.data.referralProcessed 
@@ -113,7 +108,6 @@ export default function Dashboard() {
   return (
     <Layout showHeader>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -165,11 +159,8 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Referral Link & Purchase */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Referral Link Card */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -187,7 +178,6 @@ export default function Dashboard() {
               <CopyReferral link={stats.referralLink} />
             </motion.div>
 
-            {/* Purchase Simulation Card */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -220,7 +210,6 @@ export default function Dashboard() {
               </Button>
             </motion.div>
 
-            {/* Charts */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -230,7 +219,6 @@ export default function Dashboard() {
             </motion.div>
           </div>
 
-          {/* Right Column - Sidebar */}
           <div className="space-y-6">
             <motion.div 
               initial={{ opacity: 0, x: 20 }}

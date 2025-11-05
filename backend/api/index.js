@@ -1,5 +1,3 @@
-// api/index.js - Vercel Serverless Function Entry Point
-
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -12,10 +10,8 @@ const swaggerJSDoc = require('swagger-jsdoc');
 const app = express();
 const mongoose = require('mongoose');
 
-// --- 1. Database Connection & Models ---
 let cachedDb = null;
 
-// User Schema
 const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, index: true },
   passwordHash: { type: String, required: true },
@@ -27,7 +23,6 @@ UserSchema.methods.comparePassword = function (password) {
   return bcrypt.compare(password, this.passwordHash);
 };
 
-// Referral Schema
 const ReferralSchema = new mongoose.Schema({
   referrerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   referredUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -37,22 +32,19 @@ const ReferralSchema = new mongoose.Schema({
   expiryDate: { type: Date, required: true },
 }, { timestamps: true });
 
-// Purchase Schema
 const PurchaseSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   amount: { type: Number, required: true },
   referralId: { type: mongoose.Schema.Types.ObjectId, ref: 'Referral' },
-  creditsAwarded: { type: Number, default: 0 }, // Credits awarded to purchaser
-  referrerCreditsAwarded: { type: Number, default: 0 }, // Credits awarded to referrer
+  creditsAwarded: { type: Number, default: 0 },
+  referrerCreditsAwarded: { type: Number, default: 0 }, 
   referrerCredited: { type: Boolean, default: false },
 }, { timestamps: true });
 
-// Models
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Referral = mongoose.models.Referral || mongoose.model('Referral', ReferralSchema);
 const Purchase = mongoose.models.Purchase || mongoose.model('Purchase', PurchaseSchema);
 
-// Validation Schemas
 const RegisterSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -64,7 +56,6 @@ const LoginSchema = z.object({
   password: z.string().min(1),
 });
 
-// Utility Functions
 function generateReferralCode() {
   return crypto.randomBytes(4).toString('hex');
 }
@@ -94,43 +85,35 @@ async function connectToDatabase() {
       maxPoolSize: 10,
       minPoolSize: 1,
     });
-    console.log('✅ Database connection established');
+    console.log(' Database connection established');
     return mongoose.connection;
   } catch (error) {
-    console.error('❌ Database connection error:', error.message);
+    console.error(' Database connection error:', error.message);
     throw error;
   }
 }
 
-// Don't initialize connection here - do it per request
 
-// --- 2. Middleware Configuration ---
-
-// Whitelist the Vercel Frontend URL (using ENV variable)
 const allowedOrigins = [
-  process.env.FRONTEND_URL, // e.g., https://your-app-name.vercel.app
+  process.env.FRONTEND_URL, 
   'https://referral-hub-l1a3-git-main-mohishs-projects-43ec9c03.vercel.app'
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true); 
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
+    // Allow requests with no origin (direct browser access, mobile apps, curl)
+    if (!origin) return callback(null, true);
+    
+    // Allow all origins for now (can be made more restrictive later)
     return callback(null, true);
   },
   methods: 'GET, POST, PUT, DELETE, OPTIONS',
-  credentials: true, // Crucial for cookies/sessions
+  credentials: true,
 }));
 
-// Body parser middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// --- Swagger Configuration ---
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -178,55 +161,122 @@ const swaggerOptions = {
     },
     security: [{ cookieAuth: [] }],
   },
-  apis: [], // We'll define routes inline
+  apis: [], 
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
 
 
-// --- 3. Route Definitions ---
 
-// Swagger Documentation
-app.use('/api-docs', swaggerUi.serve);
 app.get('/api-docs', (req, res) => {
-  res.send(swaggerUi.generateHTML(swaggerSpec, {
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'ReferralHub API Documentation',
-  }));
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json({
+    openapi: '3.0.0',
+    info: {
+      title: 'ReferralHub API',
+      version: '1.0.0',
+      description: 'A comprehensive referral system API'
+    },
+    servers: [
+      {
+        url: req.protocol + '://' + req.get('host'),
+        description: 'Current server'
+      }
+    ],
+    paths: {
+      '/api/health': {
+        get: {
+          summary: 'Health check',
+          responses: {
+            '200': {
+              description: 'API is healthy'
+            }
+          }
+        }
+      },
+      '/api/auth/register': {
+        post: {
+          summary: 'Register a new user',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    email: { type: 'string', format: 'email' },
+                    password: { type: 'string', minLength: 8 },
+                    referralCode: { type: 'string' }
+                  },
+                  required: ['email', 'password']
+                }
+              }
+            }
+          },
+          responses: {
+            '201': { description: 'User registered successfully' },
+            '400': { description: 'Validation error' },
+            '409': { description: 'Email already in use' }
+          }
+        }
+      },
+      '/api/auth/login': {
+        post: {
+          summary: 'Login user',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    email: { type: 'string', format: 'email' },
+                    password: { type: 'string' }
+                  },
+                  required: ['email', 'password']
+                }
+              }
+            }
+          },
+          responses: {
+            '200': { description: 'Login successful' },
+            '401': { description: 'Invalid credentials' }
+          }
+        }
+      }
+    }
+  });
 });
 
-// Health Check
-/**
- * @swagger
- * /api/health:
- *   get:
- *     summary: Health check endpoint
- *     tags: [System]
- *     security: []
- *     responses:
- *       200:
- *         description: API is healthy
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: ok
- *                 message:
- *                   type: string
- *                   example: Vercel Express API is running.
- */
+app.use('/api-docs-ui', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'ReferralHub API Documentation',
+}));
+
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'Vercel Express API is running.' });
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.status(200).json({ 
+    status: 'ok', 
+    message: 'Vercel Express API is running.',
+    timestamp: new Date().toISOString(),
+    userAgent: req.get('User-Agent') || 'unknown'
+  });
 });
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'Vercel Express API is running.' });
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.status(200).json({ 
+    status: 'ok', 
+    message: 'Vercel Express API is running.',
+    timestamp: new Date().toISOString(),
+    userAgent: req.get('User-Agent') || 'unknown'
+  });
 });
 
-// Environment Variables Debug endpoint
 app.get('/api/debug/env', (req, res) => {
   res.json({
     environment: process.env.NODE_ENV,
@@ -242,7 +292,6 @@ app.get('/api/debug/env', (req, res) => {
   });
 });
 
-// JWT Test endpoint
 app.get('/api/test-jwt', (req, res) => {
   try {
     const testPayload = { userId: 'test123', timestamp: Date.now() };
@@ -253,9 +302,8 @@ app.get('/api/test-jwt', (req, res) => {
     const token = signJwt(testPayload);
     console.log(`🎫 Generated token: ${token.substring(0, 20)}...`);
     
-    // Verify the token immediately with the same secret
     const decoded = jwt.verify(token, jwtSecret);
-    console.log(`✅ Token verified successfully:`, decoded);
+    console.log(` Token verified successfully:`, decoded);
     
     res.json({
       success: true,
@@ -270,7 +318,7 @@ app.get('/api/test-jwt', (req, res) => {
       tokenPreview: token.substring(0, 50) + '...'
     });
   } catch (error) {
-    console.error('❌ JWT Test failed:', error);
+    console.error(' JWT Test failed:', error);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -281,52 +329,7 @@ app.get('/api/test-jwt', (req, res) => {
   }
 });
 
-// Auth Routes
-/**
- * @swagger
- * /api/auth/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Authentication]
- *     security: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: user@example.com
- *               password:
- *                 type: string
- *                 minLength: 8
- *                 example: password123
- *               referralCode:
- *                 type: string
- *                 example: abc123def
- *     responses:
- *       201:
- *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *                 token:
- *                   type: string
- *       400:
- *         description: Validation error
- *       409:
- *         description: Email already in use
- */
+
 app.post('/api/auth/register', async (req, res) => {
   try {
     await connectToDatabase();
@@ -349,20 +352,20 @@ app.post('/api/auth/register', async (req, res) => {
       const newUser = await User.create([{ email, passwordHash, referralCode: code, credits: 0 }], { session });
       const user = newUser[0];
       
-      console.log(`✅ User created: ${user.email} with referral code: ${user.referralCode}`);
+      console.log(` User created: ${user.email} with referral code: ${user.referralCode}`);
 
       if (referralCode) {
         const referrer = await User.findOne({ referralCode }).session(session);
         if (referrer) {
-          console.log(`✅ Referrer found: ${referrer.email} (${referrer._id})`);
+          console.log(` Referrer found: ${referrer.email} (${referrer._id})`);
           const expiry = new Date();
           expiry.setDate(expiry.getDate() + 30);
           const referralDoc = await Referral.create([
             { referrerId: referrer._id, referredUserId: user._id, referralCode, status: 'pending', credited: false, expiryDate: expiry },
           ], { session });
-          console.log(`✅ Referral relationship created: ${referralDoc[0]._id}`);
+          console.log(` Referral relationship created: ${referralDoc[0]._id}`);
         } else {
-          console.log(`❌ No referrer found with code: ${referralCode}`);
+          console.log(` No referrer found with code: ${referralCode}`);
         }
       }
 
@@ -374,13 +377,13 @@ app.post('/api/auth/register', async (req, res) => {
         .cookie(cookieName, token, {
           httpOnly: true,
           secure: cookieSecure,
-          sameSite: 'none', // Changed to 'none' for cross-domain
+          sameSite: 'none', 
           maxAge: 7 * 24 * 60 * 60 * 1000,
         })
         .status(201)
         .json({ 
           user: { id: String(user._id), email: user.email, referralCode: user.referralCode, credits: user.credits },
-          token: token // Also return token in response for debugging
+          token: token 
         });
     });
     session.endSession();
@@ -391,45 +394,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/auth/login:
- *   post:
- *     summary: Login user
- *     tags: [Authentication]
- *     security: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: user@example.com
- *               password:
- *                 type: string
- *                 example: password123
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *                 token:
- *                   type: string
- *       401:
- *         description: Invalid credentials
- */
+
 app.post('/api/auth/login', async (req, res) => {
   try {
     await connectToDatabase();
@@ -439,35 +404,35 @@ app.post('/api/auth/login', async (req, res) => {
     
     const user = await User.findOne({ email });
     if (!user) {
-      console.log(`❌ User not found: ${email}`);
+      console.log(` User not found: ${email}`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
     const passwordMatch = await user.comparePassword(password);
     if (!passwordMatch) {
-      console.log(`❌ Password mismatch for: ${email}`);
+      console.log(` Password mismatch for: ${email}`);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    console.log(`✅ User authenticated: ${email}`);
+    console.log(` User authenticated: ${email}`);
     
     const token = signJwt({ userId: String(user._id) });
     const cookieName = process.env.COOKIE_NAME || 'access_token';
     const cookieSecure = process.env.COOKIE_SECURE === 'true';
     
-    console.log(`🍪 Setting cookie: ${cookieName}, secure: ${cookieSecure}`);
-    console.log(`🔑 JWT token generated, length: ${token.length}`);
+    console.log(`Setting cookie: ${cookieName}, secure: ${cookieSecure}`);
+    console.log(`JWT token generated, length: ${token.length}`);
     
     res
       .cookie(cookieName, token, {
         httpOnly: true,
         secure: cookieSecure,
-        sameSite: 'none', // Changed to 'none' for cross-domain
+        sameSite: 'none', 
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .json({ 
         user: { id: String(user._id), email: user.email, referralCode: user.referralCode, credits: user.credits },
-        token: token, // Also return token in response for debugging
+        token: token, 
         debug: {
           jwtSecretSet: !!process.env.JWT_SECRET,
           cookieSecure: cookieSecure,
@@ -475,7 +440,7 @@ app.post('/api/auth/login', async (req, res) => {
         }
       });
   } catch (err) {
-    console.error('❌ Login error:', err);
+    console.error(' Login error:', err);
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
     return res.status(500).json({ error: 'Login failed' });
   }
@@ -488,17 +453,14 @@ app.post('/api/auth/logout', (req, res) => {
   res.clearCookie(cookieName, { 
     httpOnly: true, 
     secure: cookieSecure, 
-    sameSite: 'none' // Changed to 'none' for cross-domain
+    sameSite: 'none' 
   }).json({ ok: true });
 });
 
-// Middleware to verify JWT token
 function verifyToken(req, res, next) {
   const cookieName = process.env.COOKIE_NAME || 'access_token';
   let token = req.cookies[cookieName];
-  
-  // Also check Authorization header as fallback
-  if (!token && req.headers.authorization) {
+    if (!token && req.headers.authorization) {
     const authHeader = req.headers.authorization;
     if (authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
@@ -506,30 +468,29 @@ function verifyToken(req, res, next) {
     }
   }
   
-  console.log(`🔍 Token verification - Cookie name: ${cookieName}`);
-  console.log(`🔍 Token found: ${!!token}`);
-  console.log(`🔍 All cookies:`, Object.keys(req.cookies || {}));
-  console.log(`🔍 Authorization header:`, !!req.headers.authorization);
+  console.log(`Token verification - Cookie name: ${cookieName}`);
+  console.log(`Token found: ${!!token}`);
+  console.log(`All cookies:`, Object.keys(req.cookies || {}));
+  console.log(`Authorization header:`, !!req.headers.authorization);
   
   if (!token) {
-    console.log(`❌ No token provided in cookie or Authorization header`);
+    console.log(`No token provided in cookie or Authorization header`);
     return res.status(401).json({ error: 'No token provided' });
   }
   
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
-    console.log(`✅ Token verified for user: ${decoded.userId}`);
+    console.log(` Token verified for user: ${decoded.userId}`);
     req.userId = decoded.userId;
     next();
   } catch (error) {
-    console.log(`❌ Token verification failed:`, error.message);
+    console.log(` Token verification failed:`, error.message);
     return res.status(401).json({ error: 'Invalid token' });
   }
 }
 
-// Simple auth test endpoint
 app.get('/api/auth/test', verifyToken, (req, res) => {
-  console.log('🧪 Auth test endpoint called for user:', req.userId);
+  console.log(' Auth test endpoint called for user:', req.userId);
   res.json({ 
     success: true, 
     message: 'Authentication working', 
@@ -538,20 +499,19 @@ app.get('/api/auth/test', verifyToken, (req, res) => {
   });
 });
 
-// User endpoints
 app.get('/api/users/me', verifyToken, async (req, res) => {
   try {
-    console.log('👤 /users/me called for user:', req.userId);
+    console.log(' /users/me called for user:', req.userId);
     await connectToDatabase();
     const user = await User.findById(req.userId);
     if (!user) {
-      console.log('❌ User not found in database:', req.userId);
+      console.log(' User not found in database:', req.userId);
       return res.status(404).json({ error: 'User not found' });
     }
-    console.log('✅ User found:', user.email);
+    console.log(' User found:', user.email);
     res.json({ user: { id: user._id, email: user.email, referralCode: user.referralCode, credits: user.credits } });
   } catch (error) {
-    console.error('❌ Get user error:', error);
+    console.error(' Get user error:', error);
     res.status(500).json({ error: 'Failed to get user' });
   }
 });
@@ -581,7 +541,7 @@ app.get('/api/users/dashboard', verifyToken, async (req, res) => {
   }
 });
 
-// Purchase endpoint
+
 app.post('/api/purchases', verifyToken, async (req, res) => {
   try {
     await connectToDatabase();
@@ -591,18 +551,16 @@ app.post('/api/purchases', verifyToken, async (req, res) => {
     
     const session = await mongoose.startSession();
     await session.withTransaction(async () => {
-      // Get the purchasing user
       const purchaser = await User.findById(req.userId).session(session);
       if (!purchaser) {
         throw new Error('User not found');
       }
       
-      console.log(`👤 Purchaser: ${purchaser.email}`);
+      console.log(` Purchaser: ${purchaser.email}`);
       
-      // Find if this user was referred by someone
       const referralRelationship = await Referral.findOne({ 
         referredUserId: req.userId,
-        status: 'pending' // Only process pending referrals
+        status: 'pending' 
       }).session(session);
       
       let referrerCreditsAwarded = 0;
@@ -610,59 +568,53 @@ app.post('/api/purchases', verifyToken, async (req, res) => {
       let referrerCredited = false;
       
       if (referralRelationship) {
-        console.log(`🔗 Found referral relationship: ${referralRelationship._id}`);
+        console.log(` Found referral relationship: ${referralRelationship._id}`);
         
-        // Get the referrer
         const referrer = await User.findById(referralRelationship.referrerId).session(session);
         if (referrer) {
-          console.log(`👑 Referrer found: ${referrer.email}`);
+          console.log(` Referrer found: ${referrer.email}`);
           
-          // Give 2 credits to the referrer
           referrer.credits += 2;
           await referrer.save({ session });
           referrerCreditsAwarded = 2;
           referrerCredited = true;
           
-          console.log(`✅ Referrer ${referrer.email} received 2 credits. New total: ${referrer.credits}`);
+          console.log(` Referrer ${referrer.email} received 2 credits. New total: ${referrer.credits}`);
           
-          // ALSO give 2 credits to the purchaser (referred user)
           purchaser.credits += 2;
           await purchaser.save({ session });
           purchaserCreditsAwarded = 2;
           
-          console.log(`✅ Purchaser ${purchaser.email} received 2 credits. New total: ${purchaser.credits}`);
+          console.log(` Purchaser ${purchaser.email} received 2 credits. New total: ${purchaser.credits}`);
           
-          // Mark the referral as converted and credited
           referralRelationship.status = 'converted';
           referralRelationship.credited = true;
           await referralRelationship.save({ session });
           
-          console.log(`✅ Referral relationship marked as converted`);
+          console.log(` Referral relationship marked as converted`);
         }
       } else {
-        console.log(`ℹ️ No pending referral found for user ${purchaser.email}`);
-        console.log(`💰 Regular purchase - no referral credits awarded`);
+        console.log(`No pending referral found for user ${purchaser.email}`);
+        console.log(` Regular purchase - no referral credits awarded`);
       }
       
-      // Create purchase record
       const purchaseData = {
         userId: req.userId,
         amount: amount,
         referralId: referralRelationship?._id,
-        creditsAwarded: purchaserCreditsAwarded, // Credits awarded to purchaser
-        referrerCreditsAwarded: referrerCreditsAwarded, // Credits awarded to referrer
+        creditsAwarded: purchaserCreditsAwarded, 
+        referrerCreditsAwarded: referrerCreditsAwarded, 
         referrerCredited: referrerCredited
       };
       
-      console.log('📝 Creating purchase record:', purchaseData);
+      console.log(' Creating purchase record:', purchaseData);
       await Purchase.create([purchaseData], { session });
       
-      console.log(`💰 Purchase completed. Purchaser credits: ${purchaserCreditsAwarded}, Referrer credits: ${referrerCreditsAwarded}`);
+      console.log(` Purchase completed. Purchaser credits: ${purchaserCreditsAwarded}, Referrer credits: ${referrerCreditsAwarded}`);
     });
     
     session.endSession();
     
-    // Get updated user data
     const updatedUser = await User.findById(req.userId);
     
     res.json({ 
@@ -672,7 +624,7 @@ app.post('/api/purchases', verifyToken, async (req, res) => {
       referralProcessed: true
     });
   } catch (error) {
-    console.error('❌ Purchase error:', error);
+    console.error(' Purchase error:', error);
     console.error('Error details:', {
       message: error.message,
       stack: error.stack,
@@ -685,7 +637,6 @@ app.post('/api/purchases', verifyToken, async (req, res) => {
   }
 });
 
-// Get purchase history (for debugging)
 app.get('/api/purchases/history', verifyToken, async (req, res) => {
   try {
     await connectToDatabase();
@@ -696,22 +647,19 @@ app.get('/api/purchases/history', verifyToken, async (req, res) => {
     
     res.json({ purchases });
   } catch (error) {
-    console.error('❌ Purchase history error:', error);
+    console.error(' Purchase history error:', error);
     res.status(500).json({ error: 'Failed to get purchase history' });
   }
 });
 
-// Get referral history (for debugging)
 app.get('/api/referrals/history', verifyToken, async (req, res) => {
   try {
     await connectToDatabase();
     
-    // Referrals made by this user (people they referred)
     const referralsMade = await Referral.find({ referrerId: req.userId })
       .populate('referredUserId', 'email')
       .sort({ createdAt: -1 });
     
-    // Referrals where this user was referred
     const referralsReceived = await Referral.find({ referredUserId: req.userId })
       .populate('referrerId', 'email')
       .sort({ createdAt: -1 });
@@ -721,23 +669,21 @@ app.get('/api/referrals/history', verifyToken, async (req, res) => {
       referralsReceived
     });
   } catch (error) {
-    console.error('❌ Referral history error:', error);
+    console.error(' Referral history error:', error);
     res.status(500).json({ error: 'Failed to get referral history' });
   }
 });
 
-// Test referral system (for debugging)
 app.post('/api/test/referral-system', async (req, res) => {
   try {
     await connectToDatabase();
     
-    console.log('🧪 Testing referral system...');
+    console.log(' Testing referral system...');
     
     const session = await mongoose.startSession();
     let testResults = {};
     
     await session.withTransaction(async () => {
-      // Create referrer user
       const referrerEmail = `referrer${Date.now()}@test.com`;
       const referrerPassword = await bcrypt.hash('password123', 12);
       let referrerCode = generateReferralCode();
@@ -756,7 +702,6 @@ app.post('/api/test/referral-system', async (req, res) => {
         initialCredits: referrer[0].credits
       };
       
-      // Create referred user
       const referredEmail = `referred${Date.now()}@test.com`;
       const referredPassword = await bcrypt.hash('password123', 12);
       let referredCode = generateReferralCode();
@@ -775,7 +720,6 @@ app.post('/api/test/referral-system', async (req, res) => {
         initialCredits: referred[0].credits
       };
       
-      // Create referral relationship
       const expiry = new Date();
       expiry.setDate(expiry.getDate() + 30);
       
@@ -794,38 +738,32 @@ app.post('/api/test/referral-system', async (req, res) => {
         credited: referralRelation[0].credited
       };
       
-      // Simulate purchase by referred user
       const purchaseAmount = 10;
       
-      // Find the referral relationship (simulate the purchase logic)
       const foundReferral = await Referral.findOne({
         referredUserId: referred[0]._id,
         status: 'pending'
       }).session(session);
       
       if (foundReferral) {
-        // Give credits to referrer
         const referrerToUpdate = await User.findById(foundReferral.referrerId).session(session);
         referrerToUpdate.credits += 2;
         await referrerToUpdate.save({ session });
         
-        // Give credits to purchaser (referred user)
         const referredToUpdate = await User.findById(referred[0]._id).session(session);
         referredToUpdate.credits += 2;
         await referredToUpdate.save({ session });
         
-        // Mark referral as converted
         foundReferral.status = 'converted';
         foundReferral.credited = true;
         await foundReferral.save({ session });
         
-        // Create purchase record
         await Purchase.create([{
           userId: referred[0]._id,
           amount: purchaseAmount,
           referralId: foundReferral._id,
-          creditsAwarded: 2, // Credits to purchaser
-          referrerCreditsAwarded: 2, // Credits to referrer
+          creditsAwarded: 2, 
+          referrerCreditsAwarded: 2, 
           referrerCredited: true
         }], { session });
         
@@ -847,7 +785,7 @@ app.post('/api/test/referral-system', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Referral system test error:', error);
+    console.error(' Referral system test error:', error);
     res.status(500).json({ 
       error: 'Test failed',
       details: error.message 
@@ -855,23 +793,20 @@ app.post('/api/test/referral-system', async (req, res) => {
   }
 });
 
-// Credits endpoints
 app.get('/api/credits/activity', verifyToken, async (req, res) => {
   try {
-    // Mock activity data for now
     res.json(['Recent purchase: +2 credits', 'Referral converted: +2 credits']);
   } catch (error) {
-    console.error('❌ Credits activity error:', error);
+    console.error('Credits activity error:', error);
     res.status(500).json({ error: 'Failed to get credits activity' });
   }
 });
 
 app.get('/api/credits/history', verifyToken, async (req, res) => {
   try {
-    // Mock history data for now
     res.json([]);
   } catch (error) {
-    console.error('❌ Credits history error:', error);
+    console.error(' Credits history error:', error);
     res.status(500).json({ error: 'Failed to get credits history' });
   }
 });
@@ -895,17 +830,15 @@ app.post('/api/credits/redeem', verifyToken, async (req, res) => {
     
     res.json({ success: true, message: `Redeemed ${item}`, remainingCredits: user.credits });
   } catch (error) {
-    console.error('❌ Credits redeem error:', error);
+    console.error(' Credits redeem error:', error);
     res.status(500).json({ error: 'Failed to redeem credits' });
   }
 });
 
-// Referrals endpoints
 app.get('/api/referrals/leaderboard', verifyToken, async (req, res) => {
   try {
     await connectToDatabase();
     
-    // Get top referrers
     const leaderboard = await User.aggregate([
       {
         $lookup: {
@@ -949,17 +882,14 @@ app.get('/api/referrals/leaderboard', verifyToken, async (req, res) => {
     
     res.json({ leaderboard });
   } catch (error) {
-    console.error('❌ Leaderboard error:', error);
+    console.error('Leaderboard error:', error);
     res.status(500).json({ error: 'Failed to get leaderboard' });
   }
 });
 
-// Catch-all route for unhandled endpoints
 app.use((req, res) => {
   res.status(404).json({ error: 'API Endpoint Not Found' });
 });
 
-// --- 4. Export the App Instance (THE KEY FOR VERCEL) ---
 module.exports = app;
 
-// DO NOT use app.listen()

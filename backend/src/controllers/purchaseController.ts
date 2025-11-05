@@ -25,31 +25,31 @@ export async function simulatePurchase(req: AuthedRequest, res: Response) {
       const purchase = await Purchase.create([{ userId, amount, isFirst }], { session });
       createdPurchaseId = purchase[0]._id.toString();
 
-      console.log(`📦 Purchase created: ${createdPurchaseId}, isFirst: ${isFirst}`);
+      console.log(`Purchase created: ${createdPurchaseId}, isFirst: ${isFirst}`);
 
       if (!isFirst) {
-        console.log(`❌ Not first purchase, no credits awarded`);
+        console.log(`Not first purchase, no credits awarded`);
         return;
       }
 
       const referral = await Referral.findOne({ referredUserId: userId }).session(session);
       if (!referral) {
-        console.log(`❌ No referral found for user: ${userId}`);
+        console.log(`No referral found for user: ${userId}`);
         return;
       }
       if (referral.expiryDate && referral.expiryDate < new Date()) {
-        console.log(`❌ Referral expired for user: ${userId}`);
+        console.log(` Referral expired for user: ${userId}`);
         return;
       }
       if (referral.credited) {
-        console.log(`❌ Referral already credited for user: ${userId}`);
+        console.log(` Referral already credited for user: ${userId}`);
         return;
       }
 
       const referredUser = await User.findById(userId).session(session);
       const referrer = await User.findById(referral.referrerId).session(session);
       
-      console.log(`💰 Awarding credits:`);
+      console.log(`Awarding credits:`);
       console.log(`   Referred User: ${referredUser?.email} (${referredUser?._id})`);
       console.log(`   Referrer: ${referrer?.email} (${referrer?._id})`);
       console.log(`   Referral Code: ${referral.referralCode}`);
@@ -67,7 +67,6 @@ export async function simulatePurchase(req: AuthedRequest, res: Response) {
         Referral.updateOne({ _id: referral._id }, { $set: { status: 'converted', credited: true } }).session(session),
       ]);
 
-      // Level 2 bonus: credit +1 to the referrer's referrer once per conversion
       const referrersRef = await Referral.findOne({ referredUserId: referrer._id }).session(session);
       if (referrersRef && !referral.level2Credited) {
         const grandReferrer = await User.findById(referrersRef.referrerId).session(session);

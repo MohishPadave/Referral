@@ -16,14 +16,12 @@ export default function AuthDebug() {
     setResults([]);
 
     try {
-      // Step 1: Check current state
       addResult('Initial State', true, {
         userInStore: !!user,
         tokenInLocalStorage: typeof window !== 'undefined' ? !!localStorage.getItem('auth_token') : false,
         apiBaseUrl: api.defaults.baseURL
       });
 
-      // Step 2: Test simple auth endpoint
       try {
         const authTest = await api.get('/api/auth/test');
         addResult('Auth Test', true, authTest.data);
@@ -34,7 +32,6 @@ export default function AuthDebug() {
         });
       }
 
-      // Step 3: Test /users/me
       try {
         const meResponse = await api.get('/api/users/me');
         addResult('Users Me', true, meResponse.data);
@@ -45,7 +42,6 @@ export default function AuthDebug() {
         });
       }
 
-      // Step 4: Test dashboard endpoint
       try {
         const dashboardResponse = await api.get('/api/users/dashboard');
         addResult('Dashboard', true, dashboardResponse.data);
@@ -69,7 +65,6 @@ export default function AuthDebug() {
       const testEmail = `test${Date.now()}@example.com`;
       const testPassword = 'testpassword123';
 
-      // Register new user
       const registerResponse = await api.post('/api/auth/register', {
         email: testEmail,
         password: testPassword
@@ -77,17 +72,14 @@ export default function AuthDebug() {
 
       addResult('Registration', true, registerResponse.data);
 
-      // Store token
       if (registerResponse.data.token && typeof window !== 'undefined') {
         localStorage.setItem('auth_token', registerResponse.data.token);
         addResult('Token Storage', true, { tokenStored: true });
       }
 
-      // Set user in store
       setUser(registerResponse.data.user);
       addResult('User Store Update', true, { userSet: true });
 
-      // Test auth flow
       await testAuthFlow();
 
     } catch (error: any) {

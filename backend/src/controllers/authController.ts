@@ -17,9 +17,8 @@ export async function register(req: Request, res: Response) {
   try {
     const { email, password, referralCode } = RegisterSchema.parse(req.body);
     
-    // Development logging
     if (process.env.NODE_ENV === 'development') {
-      console.log(`👤 Registration attempt: ${email}, Referral Code: ${referralCode || 'NONE'}`);
+      console.log(`Registration attempt: ${email}, Referral Code: ${referralCode || 'NONE'}`);
     }
     
     const session = await mongoose.startSession();
@@ -37,14 +36,14 @@ export async function register(req: Request, res: Response) {
       const user = newUser[0];
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`✅ User created: ${user.email} with referral code: ${user.referralCode}`);
+        console.log(` User created: ${user.email} with referral code: ${user.referralCode}`);
       }
 
       if (referralCode) {
         const referrer = await User.findOne({ referralCode }).session(session);
         if (referrer) {
           if (process.env.NODE_ENV === 'development') {
-            console.log(`✅ Referrer found: ${referrer.email} (${referrer._id})`);
+            console.log(` Referrer found: ${referrer.email} (${referrer._id})`);
           }
           const expiry = new Date();
           expiry.setDate(expiry.getDate() + 30);
@@ -52,10 +51,10 @@ export async function register(req: Request, res: Response) {
             { referrerId: referrer._id, referredUserId: user._id, referralCode, status: 'pending', credited: false, expiryDate: expiry },
           ], { session });
           if (process.env.NODE_ENV === 'development') {
-            console.log(`✅ Referral relationship created: ${referralDoc[0]._id}`);
+            console.log(` Referral relationship created: ${referralDoc[0]._id}`);
           }
         } else if (process.env.NODE_ENV === 'development') {
-          console.log(`❌ No referrer found with code: ${referralCode}`);
+          console.log(` No referrer found with code: ${referralCode}`);
         }
       }
 

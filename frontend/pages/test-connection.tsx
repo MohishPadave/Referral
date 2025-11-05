@@ -29,9 +29,9 @@ export default function TestConnection() {
   const testDirectFetch = async () => {
     setLoading(true);
     try {
-      console.log('🧪 Testing direct fetch...');
+      console.log('Testing direct fetch...');
       const testUrl = `${api.defaults.baseURL}/api/health`;
-      console.log('🔗 URL:', testUrl);
+      console.log('URL:', testUrl);
       
       const response = await fetch(testUrl, {
         method: 'GET',
@@ -41,19 +41,19 @@ export default function TestConnection() {
         mode: 'cors',
       });
       
-      console.log('📊 Response status:', response.status);
-      console.log('📊 Response ok:', response.ok);
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log('✅ Direct fetch result:', data);
+      console.log('Direct fetch result:', data);
       setResult({ success: true, data, method: 'direct fetch', status: response.status });
     } catch (error: any) {
-      console.error('❌ Direct fetch failed:', error);
-      console.error('❌ Error details:', {
+      console.error(' Direct fetch failed:', error);
+      console.error('Error details:', {
         name: error.name,
         message: error.message,
         stack: error.stack
@@ -90,31 +90,27 @@ export default function TestConnection() {
             onClick={async () => {
               setLoading(true);
               try {
-                // Test complete authentication flow
-                console.log('🔐 Testing complete auth flow...');
-                console.log('🌐 API Base URL:', api.defaults.baseURL);
-                console.log('🍪 With credentials:', api.defaults.withCredentials);
+                console.log('🔐Testing complete auth flow...');
+                console.log(' API Base URL:', api.defaults.baseURL);
+                console.log('With credentials:', api.defaults.withCredentials);
                 
-                // Step 1: Test registration first
                 const testEmail = `test${Date.now()}@example.com`;
                 const testPassword = 'testpassword123';
                 
-                console.log('📝 Step 1: Testing registration...');
+                console.log('Step 1: Testing registration...');
                 const registerResponse = await api.post('/api/auth/register', { 
                   email: testEmail, 
                   password: testPassword 
                 });
-                console.log('✅ Registration response:', registerResponse.data);
+                console.log('Registration response:', registerResponse.data);
                 
-                // Step 2: Test protected endpoint immediately after registration
-                console.log('🔒 Step 2: Testing /users/me after registration...');
+                console.log(' Step 2: Testing /users/me after registration...');
                 const meResponse = await api.get('/api/users/me');
-                console.log('✅ /users/me response:', meResponse.data);
+                console.log(' /users/me response:', meResponse.data);
                 
-                // Step 3: Test dashboard endpoint
-                console.log('📊 Step 3: Testing /users/dashboard...');
+                console.log('Step 3: Testing /users/dashboard...');
                 const dashboardResponse = await api.get('/api/users/dashboard');
-                console.log('✅ Dashboard response:', dashboardResponse.data);
+                console.log(' Dashboard response:', dashboardResponse.data);
                 
                 setResult({ 
                   success: true, 
@@ -127,7 +123,7 @@ export default function TestConnection() {
                   }
                 });
               } catch (error: any) {
-                console.error('🔐 Auth flow test failed:', error);
+                console.error('Auth flow test failed:', error);
                 setResult({ 
                   success: false, 
                   error: error.response?.data?.error || error.message, 
@@ -144,24 +140,22 @@ export default function TestConnection() {
             variant="secondary"
             className="w-full"
           >
-            🔐 Test Complete Auth Flow
+            Test Complete Auth Flow
           </Button>
           
           <Button 
             onClick={async () => {
               setLoading(true);
               try {
-                // Test existing user login
-                console.log('🔑 Testing existing user login...');
+                console.log('Testing existing user login...');
                 const loginResponse = await api.post('/api/auth/login', { 
                   email: 'test@example.com', 
                   password: 'testpassword123' 
                 });
-                console.log('✅ Login response:', loginResponse.data);
+                console.log(' Login response:', loginResponse.data);
                 
-                // Test protected endpoint
                 const meResponse = await api.get('/api/users/me');
-                console.log('✅ /users/me response:', meResponse.data);
+                console.log('/users/me response:', meResponse.data);
                 
                 setResult({ 
                   success: true, 
@@ -171,7 +165,7 @@ export default function TestConnection() {
                   userData: meResponse.data
                 });
               } catch (error: any) {
-                console.error('🔐 Login test failed:', error);
+                console.error(' Login test failed:', error);
                 setResult({ 
                   success: false, 
                   error: error.response?.data?.error || error.message, 
@@ -187,15 +181,14 @@ export default function TestConnection() {
             variant="outline"
             className="w-full"
           >
-            🔑 Test Existing User Login
+            Test Existing User Login
           </Button>
           
           <Button 
             onClick={async () => {
               setLoading(true);
               try {
-                // Simple ping test
-                console.log('🏓 Testing basic connectivity...');
+                console.log('Testing basic connectivity...');
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
                 
@@ -205,10 +198,10 @@ export default function TestConnection() {
                 });
                 
                 clearTimeout(timeoutId);
-                console.log('🏓 Basic connectivity: OK');
+                console.log(' Basic connectivity: OK');
                 setResult({ success: true, message: 'Basic connectivity works', method: 'ping' });
               } catch (error: any) {
-                console.error('🏓 Basic connectivity failed:', error);
+                console.error(' Basic connectivity failed:', error);
                 if (error.name === 'AbortError') {
                   setResult({ success: false, error: 'Timeout - Railway backend not responding', method: 'ping' });
                 } else {
@@ -222,7 +215,7 @@ export default function TestConnection() {
             variant="outline"
             className="w-full"
           >
-            🏓 Test Basic Connectivity
+            Test Basic Connectivity
           </Button>
           
           <Button 
@@ -260,7 +253,7 @@ export default function TestConnection() {
         {result && (
           <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <h3 className="text-lg font-semibold mb-4">
-              {result.success ? '✅ Success' : '❌ Failed'}
+              {result.success ? ' Success' : ' Failed'}
             </h3>
             <pre className="bg-gray-100 dark:bg-gray-700 p-4 rounded text-sm overflow-auto">
               {JSON.stringify(result, null, 2)}

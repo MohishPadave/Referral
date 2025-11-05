@@ -38,7 +38,6 @@ export default function Signup() {
       console.log('Signup successful:', data);
       setUser(data.user);
       
-      // Store token in localStorage as fallback for cookie issues
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
         console.log('🔑 Token stored in localStorage');
@@ -88,7 +87,6 @@ export default function Signup() {
             )}
           </motion.div>
 
-          {/* Form */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

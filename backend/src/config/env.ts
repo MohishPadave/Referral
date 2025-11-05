@@ -1,10 +1,8 @@
 import 'dotenv/config';
 
-// Helper function to clean and validate URLs
 function cleanUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
   const cleaned = url.trim().replace(/\s+/g, '');
-  // Basic URL validation
   if (cleaned === '*') return cleaned;
   try {
     new URL(cleaned);

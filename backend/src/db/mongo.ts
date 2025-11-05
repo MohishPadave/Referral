@@ -10,9 +10,9 @@ export async function connectMongo(): Promise<void> {
     console.log('Attempting MongoDB connection...');
     
     await mongoose.connect(env.mongoUri, {
-      serverSelectionTimeoutMS: 5000, // Reduced timeout
-      socketTimeoutMS: 30000, // Reduced timeout
-      maxPoolSize: 5, // Reduced pool size
+      serverSelectionTimeoutMS: 5000, 
+      socketTimeoutMS: 30000, 
+      maxPoolSize: 5, 
       minPoolSize: 1,
       retryWrites: true,
       retryReads: true,
@@ -20,7 +20,6 @@ export async function connectMongo(): Promise<void> {
 
     console.log('MongoDB connection established successfully');
     
-    // Set up connection event handlers
     mongoose.connection.on('error', (error) => {
       console.error('MongoDB connection error:', error);
     });

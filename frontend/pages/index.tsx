@@ -7,9 +7,7 @@ export default function Home() {
   return (
     <Layout>
       <div className="min-h-screen">
-        {/* Hero Section */}
         <div className="relative overflow-hidden">
-          {/* Background Elements */}
           <div className="absolute inset-0">
             <div className="absolute top-0 left-0 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
             <div className="absolute top-0 right-0 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
@@ -64,7 +62,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Features Section */}
         <div className="py-16 bg-white dark:bg-gray-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
@@ -145,7 +142,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* CTA Section */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600">
           <div className="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
             <motion.div
